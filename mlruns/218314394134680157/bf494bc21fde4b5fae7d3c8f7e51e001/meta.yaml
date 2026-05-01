@@ -1,0 +1,15 @@
+artifact_uri: /Users/bidoun/Documents/projet_fed/mlruns/218314394134680157/bf494bc21fde4b5fae7d3c8f7e51e001/artifacts
+end_time: 1777642336585
+entry_point_name: ''
+experiment_id: '218314394134680157'
+lifecycle_stage: active
+run_id: bf494bc21fde4b5fae7d3c8f7e51e001
+run_name: exp07-optuna-FINAL
+run_uuid: bf494bc21fde4b5fae7d3c8f7e51e001
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1777636880061
+status: 3
+tags: []
+user_id: bidoun
