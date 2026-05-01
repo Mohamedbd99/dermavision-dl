@@ -1,7 +1,7 @@
 import React from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
-import ProtectedRoute from "./router/ProtectedRoute";
+import ProtectedRoute, { GuestRoute } from "./router/ProtectedRoute";
 import LoginPage    from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import PredictPage  from "./pages/PredictPage";
@@ -13,8 +13,10 @@ export default function App() {
       <AuthProvider>
         <Routes>
           {/* Public routes */}
-          <Route path="/login"    element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
+          <Route element={<GuestRoute />}>
+            <Route path="/login"    element={<LoginPage />} />
+            <Route path="/register" element={<RegisterPage />} />
+          </Route>
 
           {/* Protected routes */}
           <Route element={<ProtectedRoute />}>
