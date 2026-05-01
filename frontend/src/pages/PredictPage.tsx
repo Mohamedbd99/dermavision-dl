@@ -1,5 +1,7 @@
 import React, { useCallback, useState } from "react";
 import { predict, PredictionResult } from "../services/predict";
+import { useToast } from "../context/ToastContext";
+import { parseApiError } from "../utils/parseApiError";
 
 const CLASS_COLORS: Record<string, string> = {
   MEL:   "bg-red-500",
@@ -12,18 +14,17 @@ const CLASS_COLORS: Record<string, string> = {
 };
 
 export default function PredictPage() {
+  const { success, error: toastError } = useToast();
   const [file, setFile]         = useState<File | null>(null);
   const [preview, setPreview]   = useState<string | null>(null);
   const [result, setResult]     = useState<PredictionResult | null>(null);
   const [loading, setLoading]   = useState(false);
-  const [error, setError]       = useState("");
   const [dragging, setDragging] = useState(false);
 
   const handleFile = (f: File) => {
     setFile(f);
     setPreview(URL.createObjectURL(f));
     setResult(null);
-    setError("");
   };
 
   const onDrop = useCallback((e: React.DragEvent) => {
@@ -41,12 +42,12 @@ export default function PredictPage() {
   const handleSubmit = async () => {
     if (!file) return;
     setLoading(true);
-    setError("");
     try {
       const res = await predict(file);
       setResult(res);
-    } catch {
-      setError("Prediction failed. Please try again.");
+      success(`Analysis complete — top prediction: ${res.prediction} (${(res.confidence * 100).toFixed(1)}%)`);
+    } catch (err: unknown) {
+      toastError(parseApiError(err));
     } finally {
       setLoading(false);
     }
@@ -122,12 +123,6 @@ export default function PredictPage() {
           </button>
         )}
       </div>
-
-      {error && (
-        <p className="text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg px-3 py-2">
-          {error}
-        </p>
-      )}
 
       {/* Results */}
       {result && (

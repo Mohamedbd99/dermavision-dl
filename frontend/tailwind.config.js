@@ -16,6 +16,15 @@ export default {
       fontFamily: {
         sans: ["Inter", "system-ui", "sans-serif"],
       },
+      keyframes: {
+        "toast-in": {
+          "0%":   { opacity: "0", transform: "translateX(24px) scale(0.96)" },
+          "100%": { opacity: "1", transform: "translateX(0)   scale(1)"    },
+        },
+      },
+      animation: {
+        "toast-in": "toast-in 0.2s ease-out both",
+      },
     },
   },
   plugins: [],

@@ -4,6 +4,7 @@ import { AuthProvider } from "./context/AuthContext";
 import { ThemeProvider } from "./context/ThemeContext";
 import ProtectedRoute, { GuestRoute } from "./router/ProtectedRoute";
 import SidebarLayout from "./components/SidebarLayout";
+import { ToastProvider } from "./context/ToastContext";
 import LoginPage    from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import PredictPage  from "./pages/PredictPage";
@@ -13,6 +14,7 @@ import LandingPage from "./pages/LandingPage";
 export default function App() {
   return (
     <ThemeProvider>
+      <ToastProvider>
       <BrowserRouter>
         <AuthProvider>
           <Routes>
@@ -38,6 +40,7 @@ export default function App() {
           </Routes>
         </AuthProvider>
       </BrowserRouter>
+      </ToastProvider>
     </ThemeProvider>
   );
 }

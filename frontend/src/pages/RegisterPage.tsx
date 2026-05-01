@@ -2,25 +2,24 @@ import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { register } from "../services/auth";
 import ThemeSwitcher from "../components/ThemeSwitcher";
+import { useToast } from "../context/ToastContext";
+import { parseApiError } from "../utils/parseApiError";
 
 export default function RegisterPage() {
   const navigate = useNavigate();
+  const { success, error: toastError } = useToast();
   const [form, setForm]     = useState({ username: "", email: "", password: "" });
-  const [error, setError]   = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
     setLoading(true);
     try {
       await register(form);
+      success("Account created! Please sign in.");
       navigate("/login");
     } catch (err: unknown) {
-      const msg =
-        (err as { response?: { data?: { detail?: string } } })?.response?.data
-          ?.detail ?? "Registration failed";
-      setError(String(msg));
+      toastError(parseApiError(err));
     } finally {
       setLoading(false);
     }
@@ -58,12 +57,6 @@ export default function RegisterPage() {
               />
             </div>
           ))}
-
-          {error && (
-            <p className="text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg px-3 py-2">
-              {error}
-            </p>
-          )}
 
           <button type="submit" disabled={loading} className="btn-primary w-full">
             {loading ? "Registering…" : "Create account"}

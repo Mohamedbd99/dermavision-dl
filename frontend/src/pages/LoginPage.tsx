@@ -3,28 +3,27 @@ import { Link, useNavigate } from "react-router-dom";
 import { login } from "../services/auth";
 import { useAuth } from "../context/AuthContext";
 import ThemeSwitcher from "../components/ThemeSwitcher";
+import { useToast } from "../context/ToastContext";
+import { parseApiError } from "../utils/parseApiError";
 
 export default function LoginPage() {
   const navigate = useNavigate();
   const { refreshUser } = useAuth();
+  const { success, error: toastError } = useToast();
 
   const [form, setForm]     = useState({ username: "", password: "" });
-  const [error, setError]   = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
     setLoading(true);
     try {
       await login(form);
       await refreshUser();
+      success("Welcome back!");
       navigate("/predict");
     } catch (err: unknown) {
-      const msg =
-        (err as { response?: { data?: { detail?: string } } })?.response?.data
-          ?.detail ?? "Login failed";
-      setError(String(msg));
+      toastError(parseApiError(err));
     } finally {
       setLoading(false);
     }
@@ -73,12 +72,6 @@ export default function LoginPage() {
               onChange={(e) => setForm({ ...form, password: e.target.value })}
             />
           </div>
-
-          {error && (
-            <p className="text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg px-3 py-2">
-              {error}
-            </p>
-          )}
 
           <button
             type="submit"
