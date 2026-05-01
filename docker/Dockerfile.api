@@ -22,7 +22,9 @@ RUN mkdir -p checkpoints && \
     echo "Checkpoint downloaded: $(du -sh checkpoints/exp07-optuna-FINAL_best.pt)"
 
 # Non-root user for security
-RUN useradd -m appuser && chown -R appuser /app
+RUN useradd -m appuser && \
+    mkdir -p /app/uploads && \
+    chown -R appuser /app
 USER appuser
 
 EXPOSE 8000

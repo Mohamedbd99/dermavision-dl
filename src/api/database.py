@@ -36,7 +36,7 @@ from datetime import datetime, timezone
 
 from sqlalchemy import (
     Boolean, Column, DateTime, Float, ForeignKey,
-    Integer, String, Text, create_engine,
+    Integer, String, Text, create_engine, text,
 )
 from sqlalchemy.orm import DeclarativeBase, Session, relationship, sessionmaker
 
@@ -115,8 +115,18 @@ class Prediction(Base):
 
 # ── DB init ─────────────────────────────────────────────────────────────────
 def init_db() -> None:
-    """Create all tables if they don't exist yet (called at app startup)."""
+    """Create all tables if they don't exist yet, and run column migrations."""
     Base.metadata.create_all(bind=engine)
+    # Migration: add image_path to predictions if it doesn't exist yet
+    with engine.connect() as conn:
+        cols = [row[1] for row in conn.execute(
+            text("PRAGMA table_info(predictions)")
+        )]
+        if "image_path" not in cols:
+            conn.execute(text(
+                "ALTER TABLE predictions ADD COLUMN image_path VARCHAR(512)"
+            ))
+            conn.commit()
 
 
 # ── FastAPI dependency ───────────────────────────────────────────────────────
