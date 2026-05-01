@@ -5,8 +5,9 @@
 
 | # | Experiment | Backbone | Epochs | AUC-ROC | Accuracy | F1-macro | Sensitivity | Specificity | Class Weights | MixUp | Adv Aug |
 |---|------------|----------|--------|---------|----------|----------|-------------|-------------|:---:|:---:|:---:|
-| 1 | [exp02-efficientnet-b3-weighted](./exp02-efficientnet-b3-weighted/summary.md) | `efficientnet_b3` | 10 | **0.9644** | 0.8113 | 0.7231 | 0.7946 | 0.9621 | ✅ | ❌ | ❌ |
-| 2 | [exp01-resnet50-baseline](./exp01-resnet50-baseline/summary.md) | `resnet50` | 5 | **0.9301** | 0.7783 | 0.4669 | 0.4333 | 0.9345 | ❌ | ❌ | ❌ |
+| 1 | [exp03-efficientnet-b3-advanced-aug](./exp03-efficientnet-b3-advanced-aug/summary.md) | `efficientnet_b3` | 15 | **0.9713** | 0.8238 | 0.7720 | 0.8348 | 0.9642 | ✅ | ❌ | ✅ |
+| 2 | [exp02-efficientnet-b3-weighted](./exp02-efficientnet-b3-weighted/summary.md) | `efficientnet_b3` | 10 | **0.9644** | 0.8113 | 0.7231 | 0.7946 | 0.9621 | ✅ | ❌ | ❌ |
+| 3 | [exp01-resnet50-baseline](./exp01-resnet50-baseline/summary.md) | `resnet50` | 5 | **0.9301** | 0.7783 | 0.4669 | 0.4333 | 0.9345 | ❌ | ❌ | ❌ |
 
 ---
 
