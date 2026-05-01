@@ -152,6 +152,52 @@ dermavision-dl/
 
 ---
 
+## Troubleshooting
+
+### Docker — `dial tcp: lookup registry-1.docker.io: no such host` / `i/o timeout`
+
+Docker Desktop cannot reach Docker Hub to pull base images. This is a DNS issue on macOS.
+
+**Fix (permanent):**
+
+1. Open **Docker Desktop → Settings → Docker Engine** and add:
+   ```json
+   {
+     "dns": ["8.8.8.8", "8.8.4.4"]
+   }
+   ```
+2. Click **Apply & Restart**.
+3. Re-run `docker compose up --build`.
+
+**Alternative (no settings change):** pre-pull the images manually while connected to a working network, then build offline:
+```bash
+docker pull python:3.9-slim
+docker pull node:18-alpine
+docker pull nginx:1.25-alpine
+docker compose up --build
+```
+
+> **Root cause:** Docker Desktop loses its DNS resolver after network switches or sleep/wake cycles. Using Google DNS (`8.8.8.8`) bypasses the broken system resolver.
+
+---
+
+### `docker compose up` — `version` attribute warning
+
+```
+the attribute `version` is obsolete, it will be ignored
+```
+Harmless — newer versions of Compose no longer need the `version:` field. Safe to ignore.
+
+---
+
+### API container — model checkpoint not found
+
+The `.pt` weight files are git-ignored (too large). On a fresh clone you must either:
+- Copy `checkpoints/exp07-optuna-FINAL_best.pt` onto the machine, **or**
+- Download it from the GitHub Release attached to this repo (see Releases tab).
+
+---
+
 ## Ethical Considerations
 
 This model is a **research prototype only** and is **not intended for clinical use**.
