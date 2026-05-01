@@ -24,10 +24,13 @@ const RISK: Record<string, { label: string; color: string }> = {
 };
 
 interface Metrics {
-  total_predictions: number;
-  accuracy?: number;
-  f1_macro?: number;
-  auc_roc?: number;
+  metrics?: {
+    accuracy?: number;
+    f1_macro?: number;
+    auc_roc_macro_ovr?: number;
+  };
+  // top-level count added by us below
+  total_predictions?: number;
 }
 
 export default function DashboardPage() {
@@ -72,10 +75,10 @@ export default function DashboardPage() {
       {metrics && (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           {[
-            { label: "Total predictions", value: metrics.total_predictions ?? "—" },
-            { label: "Accuracy",          value: metrics.accuracy  ? `${(metrics.accuracy  * 100).toFixed(1)}%` : "—" },
-            { label: "F1-macro",          value: metrics.f1_macro  ? metrics.f1_macro.toFixed(3)                : "—" },
-            { label: "AUC-ROC",           value: metrics.auc_roc   ? metrics.auc_roc.toFixed(4)                 : "—" },
+            { label: "Total predictions", value: metrics.total_predictions ?? history.length },
+            { label: "Accuracy",          value: metrics.metrics?.accuracy            ? `${(metrics.metrics.accuracy * 100).toFixed(1)}%` : "—" },
+            { label: "F1-macro",          value: metrics.metrics?.f1_macro            ? metrics.metrics.f1_macro.toFixed(3)              : "—" },
+            { label: "AUC-ROC",           value: metrics.metrics?.auc_roc_macro_ovr   ? metrics.metrics.auc_roc_macro_ovr.toFixed(4)     : "—" },
           ].map(({ label, value }) => (
             <div key={label} className="card text-center">
               <p className="text-2xl font-bold text-brand-600">{value}</p>
@@ -109,13 +112,13 @@ export default function DashboardPage() {
                   <tr key={item.id} className="border-b last:border-0 hover:bg-gray-50">
                     <td className="py-3 pr-4 truncate max-w-[150px] text-gray-700">{item.filename}</td>
                     <td className="py-3 pr-4 font-medium text-gray-900">
-                      {CLASS_FULL[item.prediction] ?? item.prediction}
+                      {CLASS_FULL[item.predicted_class] ?? item.predicted_class}
                     </td>
                     <td className="py-3 pr-4 text-gray-600">
                       {(item.confidence * 100).toFixed(1)}%
                     </td>
-                    <td className={`py-3 pr-4 text-xs font-medium ${RISK[item.prediction]?.color ?? "text-gray-500"}`}>
-                      {RISK[item.prediction]?.label ?? "—"}
+                    <td className={`py-3 pr-4 text-xs font-medium ${RISK[item.predicted_class]?.color ?? "text-gray-500"}`}>
+                      {RISK[item.predicted_class]?.label ?? "—"}
                     </td>
                     <td className="py-3 text-gray-400 whitespace-nowrap">
                       {new Date(item.created_at).toLocaleString()}

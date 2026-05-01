@@ -24,8 +24,9 @@ export interface PredictionResult {
 export interface HistoryItem {
   id: number;
   filename: string;
-  prediction: string;
+  predicted_class: string;
   confidence: number;
+  all_scores: Record<string, number>;
   created_at: string;
 }
 
