@@ -1,0 +1,15 @@
+artifact_uri: /Users/bidoun/Documents/projet_fed/mlruns/471768078334234186/ef863bf275e342aaba7c83073e764aa4/artifacts
+end_time: 1777601374742
+entry_point_name: ''
+experiment_id: '471768078334234186'
+lifecycle_stage: active
+run_id: ef863bf275e342aaba7c83073e764aa4
+run_name: exp01-resnet50-baseline
+run_uuid: ef863bf275e342aaba7c83073e764aa4
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1777600007010
+status: 3
+tags: []
+user_id: bidoun

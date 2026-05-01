@@ -1,0 +1,14 @@
+{
+  "backbone": "resnet50",
+  "batch_size": "32",
+  "dropout": "0.2",
+  "epochs": "5",
+  "lr": "0.0001",
+  "mixup_alpha": "N/A",
+  "scheduler": "cosine",
+  "seed": "42",
+  "use_advanced_aug": "False",
+  "use_class_weights": "False",
+  "use_mixup": "False",
+  "weight_decay": "1e-05"
+}

@@ -34,7 +34,8 @@ pip-log.txt
 # Dataset & large files
 # ===========================
 /data/
-*.csv
+# Exclude raw data CSVs but NOT experiments/ CSVs (metrics, params)
+/data/**/*.csv
 *.h5
 *.hdf5
 *.zip
@@ -44,17 +45,21 @@ pip-log.txt
 # ===========================
 # Model weights & checkpoints
 # ===========================
+# The checkpoints/ folder is tracked; .pt files are excluded (too large for git).
+# Professor can see the folder structure and which experiments produced checkpoints.
 *.pt
 *.pth
 *.ckpt
 *.onnx
 *.bin
-checkpoints/
 
 # ===========================
 # MLflow
 # ===========================
-mlruns/
+# mlruns/ is committed so the professor can see all experiment metrics.
+# Only the large .pt artifact copies inside mlruns are excluded.
+mlruns/**/*.pt
+mlruns/**/*.pth
 mlartifacts/
 
 # ===========================

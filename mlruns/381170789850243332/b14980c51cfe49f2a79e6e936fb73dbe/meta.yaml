@@ -1,0 +1,15 @@
+artifact_uri: /Users/bidoun/Documents/projet_fed/mlruns/381170789850243332/b14980c51cfe49f2a79e6e936fb73dbe/artifacts
+end_time: 1777604133528
+entry_point_name: ''
+experiment_id: '381170789850243332'
+lifecycle_stage: active
+run_id: b14980c51cfe49f2a79e6e936fb73dbe
+run_name: exp02-efficientnet-b3-weighted
+run_uuid: b14980c51cfe49f2a79e6e936fb73dbe
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1777601473577
+status: 3
+tags: []
+user_id: bidoun

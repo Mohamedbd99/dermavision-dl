@@ -260,7 +260,8 @@ def train(
             if val_metrics['auc_roc'] > best_auc:
                 best_auc = val_metrics['auc_roc']
                 torch.save(model.state_dict(), ckpt_path)
-                mlflow.log_artifact(str(ckpt_path), artifact_path='checkpoints')
+                # Tag path only — avoids copying the .pt into mlruns (too large for git)
+                mlflow.set_tag('best_checkpoint_path', str(ckpt_path))
                 print(f"  ✓ best model saved (AUC={best_auc:.4f})")
 
         # Log final best metrics
