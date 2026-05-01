@@ -6,8 +6,8 @@ import ThemeSwitcher from "../components/ThemeSwitcher";
 import LanguageSwitcher from "../components/LanguageSwitcher";
 
 const STEP_IMGS = [
-  { n: 1, img: "/screenshots/step-1.png" },
-  { n: 2, img: "/screenshots/step-2.png" },
+  { n: 1, img: "/screenshots/step-2.png" },
+  { n: 2, img: "/screenshots/step-1.png" },
   { n: 3, img: "/screenshots/step-3.png" },
   { n: 4, img: "/screenshots/step-4.png" },
   { n: 5, img: "/screenshots/step-5.png" },
