@@ -261,7 +261,8 @@ def export(tracking_uri: str = str(MLRUNS_DIR)):
         })
         print(f"  → {out_dir.relative_to(REPO_ROOT)}/  (AUC={best_auc:.4f})")
 
-    # Rank by AUC
+    # Rank by AUC — exclude meta/summary runs (AUC=0, e.g. Optuna search summary)
+    run_summaries = [r for r in run_summaries if r['best_auc'] > 0.0]
     for i, r in enumerate(sorted(run_summaries, key=lambda x: x['best_auc'], reverse=True), 1):
         r['rank'] = i
 

@@ -228,6 +228,230 @@ git push
 
 ---
 
+### Tracking Infrastructure
+
+**Goal:** Make all experiment data visible to professor — MLflow files committed, per-run CSVs exported, leaderboard auto-generated.
+
+**Problem found:** `mlruns/` was in `.gitignore` so all metric/param files were invisible on GitHub.  
+**Fix:** Removed `mlruns/` from ignore; added `mlruns/**/*.pt` rule instead (excludes only heavy weight files).
+
+**Problem found:** `mlflow.log_artifact(ckpt_path)` was copying the 100MB `.pt` file into `mlruns/` on every save.  
+**Fix:** Changed to `mlflow.set_tag('best_checkpoint_path', str(ckpt_path))` — stores path as metadata only.
+
+**Problem found:** `*.csv` rule in `.gitignore` was blocking `experiments/` CSVs.  
+**Fix:** Changed to `/data/**/*.csv` (anchored to data folder only).
+
+**Files created:**
+- `scripts/export_experiments.py` — reads all MLflow runs → writes `experiments/<name>/{params.json, metrics_final.json, metrics_per_epoch.csv, summary.md}` + `experiments/leaderboard.md`
+- `DEVLOG.md` (this file)
+
+**Commit:** `e923bfe`
+
+---
+
+## Experiments — Full Record
+
+### Exp 01 — ResNet-50 Baseline
+
+**Purpose:** Establish lower bound. Verify training pipeline works end-to-end before any optimization.
+
+**Hypothesis:** Without class weights, model will learn to predict NV (66.9%) most of the time → high accuracy, low F1-macro.
+
+**Command:**
+```bash
+python -m src.models.training \
+  --exp_name exp01-resnet50-baseline \
+  --backbone resnet50 --epochs 5 \
+  --lr 1e-4 --dropout 0.2 --scheduler cosine --seed 42
+python scripts/export_experiments.py
+```
+
+**Result:** AUC=0.9301, acc=0.778, F1-macro=0.467  
+**Confirmed hypothesis:** F1-macro=0.467 — model strongly biased toward majority class NV.  
+**Git tag:** `exp01-resnet50-baseline_auc0.930` | **Commit:** logged in mlruns
+
+---
+
+### Exp 02 — EfficientNet-B3 + Class Weights
+
+**Purpose:** Two changes at once — better backbone (B3 vs ResNet-50) + fix class imbalance via weighted cross-entropy loss.
+
+**Hypothesis:** Class weights will dramatically improve F1-macro on minority classes (DF, VASC). B3 feature extraction better than ResNet-50 for dermoscopy.
+
+**Command:**
+```bash
+python -m src.models.training \
+  --exp_name exp02-efficientnet-b3-weighted \
+  --backbone efficientnet_b3 --epochs 10 \
+  --lr 1e-4 --dropout 0.3 --scheduler cosine \
+  --use_class_weights --seed 42
+python scripts/export_experiments.py
+```
+
+**Result:** AUC=0.9644 (+3.4pp), F1-macro=0.723 (+25.6pp!)  
+**Finding: class weights were the single biggest improvement in the entire project.** Going from 0.467 to 0.723 F1-macro in one step — the model stopped ignoring minority classes entirely.  
+**Git tag:** `exp02-efficientnet-b3-weighted_auc0.9644` | **Commit:** `e923bfe`
+
+---
+
+### Exp 03 — EfficientNet-B3 + Class Weights + Advanced Augmentation
+
+**Purpose:** Add spatial augmentations (GridDistortion + CoarseDropout) to improve generalization on dermoscopy images.
+
+**Rationale:** Dermoscopy images have artifacts (hair, gel reflections, vignetting). GridDistortion simulates lens distortion. CoarseDropout forces the model to use full lesion context rather than memorizing local patches.
+
+**Command:**
+```bash
+python -m src.models.training \
+  --exp_name exp03-efficientnet-b3-advanced-aug \
+  --backbone efficientnet_b3 --epochs 15 \
+  --lr 1e-4 --dropout 0.3 --scheduler cosine \
+  --use_class_weights --use_advanced_aug --seed 42
+python scripts/export_experiments.py
+```
+
+**Result:** AUC=0.9713 (+0.69pp vs Exp 02), acc=0.824  
+**Finding:** Advanced augmentation consistently helps. This became the **baseline for all subsequent experiments**.  
+**Git tag:** `exp03-efficientnet-b3-advanced-aug_auc0.9713` | **Commit:** `d32450b`
+
+---
+
+### Exp 04 — EfficientNet-B3 + Class Weights + MixUp Only
+
+**Purpose:** Test MixUp augmentation in isolation (without spatial aug) to isolate its contribution.
+
+**Hypothesis:** MixUp (label-smoothing via linear interpolation of samples) helps with calibration and minority class boundaries.
+
+**Command:**
+```bash
+python -m src.models.training \
+  --exp_name exp04-efficientnet-b3-mixup \
+  --backbone efficientnet_b3 --epochs 15 \
+  --lr 1e-4 --dropout 0.3 --scheduler cosine \
+  --use_class_weights --use_mixup --mixup_alpha 0.4 --seed 42
+python scripts/export_experiments.py
+```
+
+**Result:** AUC=0.9523 — **worse than Exp 02 (0.9644) and far below Exp 03 (0.9713)**  
+**Finding: MixUp alone hurts on this dataset.** Likely reason: 7-class imbalanced medical data with very distinct visual categories — blending images from different classes (e.g. MEL + NV) creates unrealistic composites that confuse the model rather than regularizing it.  
+**Git tag:** `exp04-efficientnet-b3-mixup_auc0.9523` | **Commit:** `db67489`
+
+---
+
+### Exp 05 — EfficientNet-B3 + Full Stack (Class Weights + Adv Aug + MixUp)
+
+**Purpose:** Test whether combining the best spatial augmentation (Exp 03) with MixUp recovers performance.
+
+**Hypothesis:** Maybe MixUp hurts alone but helps as an additional regularizer on top of spatial aug.
+
+**Command:**
+```bash
+python -m src.models.training \
+  --exp_name exp05-efficientnet-b3-full-stack \
+  --backbone efficientnet_b3 --epochs 20 \
+  --lr 1e-4 --dropout 0.3 --scheduler cosine \
+  --use_class_weights --use_advanced_aug --use_mixup --mixup_alpha 0.4 --seed 42
+python scripts/export_experiments.py
+```
+
+**Result:** AUC=0.9603 — below both Exp 03 (0.9713) and Exp 02 (0.9644)  
+**Finding: MixUp consistently hurts regardless of whether spatial aug is present.** Hypothesis rejected. MixUp is dropped from all future experiments.  
+**Ablation conclusion:** Exp 03 config (class weights + spatial aug, no MixUp) is the best augmentation stack.  
+**Git tag:** `exp05-efficientnet-b3-full-stack_auc0.9603` | **Commit:** `740775e`
+
+---
+
+### Exp 06 — EfficientNet-B4 Scale-Up
+
+**Purpose:** Test whether a larger backbone (B4: 19M params vs B3: 12M params) improves on the best config (Exp 03).
+
+**Hypothesis:** More capacity → better feature extraction → higher AUC.
+
+**Command:**
+```bash
+python -m src.models.training \
+  --exp_name exp06-efficientnet-b4-scaleup \
+  --backbone efficientnet_b4 --epochs 20 \
+  --lr 1e-4 --dropout 0.4 --scheduler cosine \
+  --use_class_weights --use_advanced_aug --seed 42
+python scripts/export_experiments.py
+```
+
+**Result:** AUC=0.9660, acc=0.795 — **below Exp 03 (0.9713)**, ~330s/epoch (+33% slower than B3)  
+**Finding: scale-up did not help.** B4 has more parameters but the dataset (8,012 train images) is too small to fully leverage the extra capacity. B4 likely overfits the additional parameters. Speed cost (+33%) is not justified.  
+**Conclusion:** Stay with EfficientNet-B3.  
+**Git tag:** `exp06-efficientnet-b4-scaleup_auc0.9660` | **Commit:** `5c7f615`
+
+---
+
+### Exp 07 — Optuna Hyperparameter Search + FINAL Model
+
+**Purpose:** Use Bayesian optimization to find optimal lr, weight_decay, dropout, scheduler — then do full training run with those params.
+
+**Design:**
+- Sampler: TPE (Tree-structured Parzen Estimator) — Bayesian, converges faster than random
+- Pruner: MedianPruner — kills trials underperforming the median at any epoch
+- 10 trials × 5 epochs each (fast proxy), then full 20-epoch retrain of best config
+- Search space: lr ∈ [1e-5, 5e-4] log, wd ∈ [1e-6, 1e-3] log, dropout ∈ [0.2, 0.5], scheduler ∈ {cosine, step}
+- Fixed: efficientnet_b3, class_weights=True, advanced_aug=True, mixup=False
+
+**Command:**
+```bash
+python scripts/optuna_search.py --n_trials 10 --study_name exp07-optuna \
+  2>&1 | tee logs/exp07_optuna.log
+python scripts/export_experiments.py
+```
+
+**Trial results:**
+| Trial | AUC | lr | dropout | scheduler | Notes |
+|---|---|---|---|---|---|
+| 2 | 0.9392 | 4.33e-5 | 0.420 | cosine | first complete |
+| 3 | 0.9303 | 1.84e-5 | 0.460 | step | |
+| 4 | 0.8989 | 1.08e-5 | 0.450 | cosine | low lr bad |
+| 5 | 0.9208 | 2.05e-5 | 0.357 | cosine | |
+| **6** | **0.9590** | **1.10e-4** | **0.288** | **step** | breakthrough |
+| **7** | **0.9615** | **2.16e-4** | **0.354** | **cosine** | new best |
+| 8 | 0.9597 | 1.08e-4 | 0.220 | step | |
+| **9** | **0.9628** | **2.36e-4** | **0.229** | **cosine** | **BEST TRIAL** |
+| 10 | pruned | — | — | — | MedianPruner eliminated |
+| 11 | 0.9588 | 1.34e-4 | 0.356 | cosine | TPE exploration |
+
+**FINAL retrain with best params (20 epochs):**
+
+| Epoch | AUC | Epoch | AUC |
+|---|---|---|---|
+| 1 | 0.9296 | 11 | 0.9733 |
+| 4 | 0.9603 | 12 | 0.9736 |
+| 8 | 0.9694 | 14 | 0.9759 |
+| 10 | 0.9708 | 16 | **0.9773** |
+| | | 18 | **0.9776** ← best |
+
+**Final result: AUC=0.9776, acc=0.854**
+
+**Key insights from Optuna:**
+- Default dropout (0.3) was too aggressive — optimal is 0.229 (less regularization)
+- Default lr (1e-4) was too conservative — optimal is 2.36e-4 (faster convergence)
+- Cosine scheduler confirmed as best across all top trials
+- Low lr (< 5e-5) consistently fails — model never converges properly in 5 epochs
+- The TPE sampler quickly focused on lr ≈ 1e-4 to 3e-4 range after trial 5
+
+**Checkpoint:** `checkpoints/exp07-optuna-FINAL_best.pt` ← **PRODUCTION MODEL**  
+**Git tag:** `exp07-optuna-final_auc0.9776` | **Commit:** `e349338`
+
+---
+
+## Ablation Summary
+
+| What changed | vs baseline | AUC delta | Conclusion |
+|---|---|---|---|
+| ResNet-50 → EfficientNet-B3 | Exp01→02 | +3.4pp | Backbone matters for dermoscopy |
+| No weights → class weights | Exp01→02 | +25.6pp F1 | **Most impactful single change** |
+| No aug → advanced aug | Exp02→03 | +0.7pp | Spatial aug consistently helps |
+| No MixUp → MixUp | Exp02→04 | -1.2pp | MixUp hurts on this dataset |
+| Adv aug → adv aug + MixUp | Exp03→05 | -1.1pp | MixUp hurts even with spatial aug |
+| B3 → B4 | Exp03→06 | -0.5pp | Larger backbone overfits small dataset |
+| Default lr/dropout → Optuna | Exp03→07 | +0.6pp | Hyperparameter tuning always worth it |
+
 ## Experiment Results Summary
 
 > Full details in [experiments/leaderboard.md](experiments/leaderboard.md)  

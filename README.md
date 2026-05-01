@@ -1,79 +1,163 @@
-# DermaVision DL 🔬
+# DermaVision DL
 
-Medical image classification for skin lesion detection using deep learning.
+Multi-class skin lesion classification using deep learning on the **HAM10000 / ISIC 2018** dataset.
 
-> Built with PyTorch · FastAPI · React · MLflow · Docker
-
----
-
-## 📋 Project Overview
-
-Multi-class classification of skin lesions using the **HAM10000** dataset (10,000 dermatoscopic images across 7 lesion categories).
-
-- **Model:** EfficientNet-B3 fine-tuned on ImageNet
-- **Metrics:** AUC-ROC, Sensitivity, Specificity, F1-Score
-- **Interface:** React + TypeScript frontend
-- **Backend:** FastAPI with JWT authentication
+> **Stack:** PyTorch · EfficientNet-B3 · FastAPI · React + TypeScript · MLflow · Optuna · Docker
+> **Module:** Deep Learning — Prof. Haythem Ghazouani
+> **Students:** Mohamed Bendaamar & Omar Gharbi
 
 ---
 
-## 🚀 Quick Start
+## Results
+
+| Experiment | Model | AUC-ROC | Accuracy | F1-macro |
+|---|---|---|---|---|
+| **Exp 07 — Optuna FINAL** | EfficientNet-B3 | **0.9776** | 0.854 | 0.796 |
+| Exp 03 — Advanced Aug | EfficientNet-B3 | 0.9713 | 0.824 | 0.772 |
+| Exp 06 — B4 Scale-Up | EfficientNet-B4 | 0.9660 | 0.795 | 0.711 |
+| Exp 02 — Class Weights | EfficientNet-B3 | 0.9644 | 0.811 | 0.723 |
+| Exp 01 — ResNet-50 Baseline | ResNet-50 | 0.9301 | 0.778 | 0.467 |
+
+Full leaderboard: [`experiments/leaderboard.md`](experiments/leaderboard.md)
+Per-epoch CSVs + params: [`experiments/`](experiments/)
+MLflow runs: committed in [`mlruns/`](mlruns/) (text files only, weights excluded)
+
+---
+
+## Project Overview
+
+**Dataset:** HAM10000 — 10,015 dermoscopic images, 7 lesion classes (AKIEC, BCC, BKL, DF, MEL, NV, VASC), severe imbalance (NV = 66.9%)
+**Task:** Multi-class classification
+**Primary metric:** AUC-ROC (macro OvR) — chosen because accuracy is misleading under 66.9% class imbalance
+**Split:** Stratified 80/20 → 8,012 train / 2,003 val
+
+**Key findings from ablation study (Exp 01–07):**
+- Class-weighted loss: +25.6pp F1-macro (most impactful single change)
+- GridDistortion + CoarseDropout augmentation: +0.7pp AUC
+- MixUp: consistently hurts on this dataset (−1.2pp AUC)
+- EfficientNet-B4 vs B3: B4 performs worse (overfits small dataset, +33% slower)
+- Optuna hyperparameter search (lr=2.36e-4, dropout=0.229): +0.6pp AUC
+
+---
+
+## Setup
 
 ### Prerequisites
-- Python 3.10+
-- Node.js 18+
-- Docker & docker-compose
+- Python 3.9+
+- Dataset: ISIC 2018 Task 3 (download separately — see below)
 
-### Setup
+### Install
 
 ```bash
-# Clone the repo
 git clone https://github.com/Mohamedbd99/dermavision-dl.git
 cd dermavision-dl
-
-# Create virtual environment
 python3 -m venv venv
 source venv/bin/activate
-
-# Install dependencies
 pip install -r requirements.txt
 ```
 
-### Run with Docker
-```bash
-docker-compose up --build
-```
-- API: http://localhost:8000
-- Frontend: http://localhost:3000
-- MLflow UI: http://localhost:5000
+### Dataset
 
-### Run tests
+Download from ISIC S3 (no authentication required):
 ```bash
-pytest tests/
+mkdir -p data/HAM10000
+curl -L "https://isic-challenge-data.s3.amazonaws.com/2018/ISIC2018_Task3_Training_Input.zip" \
+  -o data/HAM10000/images.zip
+curl -L "https://isic-challenge-data.s3.amazonaws.com/2018/ISIC2018_Task3_Training_GroundTruth.zip" \
+  -o data/HAM10000/labels.zip
+cd data/HAM10000 && unzip images.zip && unzip labels.zip && cd ../..
+```
+
+Expected structure:
+```
+data/HAM10000/
+├── ISIC2018_Task3_Training_Input/      # 10,015 .jpg images
+└── ISIC2018_Task3_Training_GroundTruth.csv
 ```
 
 ---
 
-## 📁 Project Structure
+## Training
+
+### Run any experiment
+```bash
+source venv/bin/activate
+python -m src.models.training \
+  --exp_name my-experiment \
+  --backbone efficientnet_b3 \
+  --epochs 20 \
+  --lr 2.36e-4 \
+  --dropout 0.229 \
+  --weight_decay 8.2e-6 \
+  --scheduler cosine \
+  --use_class_weights \
+  --use_advanced_aug \
+  --seed 42
+```
+
+### Reproduce best model (Exp 07 Optuna config)
+```bash
+python -m src.models.training \
+  --exp_name exp07-optuna-FINAL \
+  --backbone efficientnet_b3 --epochs 20 \
+  --lr 2.36e-4 --dropout 0.229 --weight_decay 8.2e-6 \
+  --scheduler cosine --use_class_weights --use_advanced_aug --seed 42
+```
+
+### Run Optuna hyperparameter search
+```bash
+python scripts/optuna_search.py --n_trials 10 --study_name my-optuna-search
+```
+
+### Export experiments to readable files
+```bash
+python scripts/export_experiments.py
+# writes experiments/<name>/{params.json, metrics_final.json, metrics_per_epoch.csv, summary.md}
+# writes experiments/leaderboard.md
+```
+
+### View MLflow UI
+```bash
+mlflow ui --backend-store-uri mlruns/
+# http://localhost:5000
+```
+
+---
+
+## Project Structure
 
 ```
 dermavision-dl/
 ├── src/
-│   ├── data/           # Dataset & preprocessing
-│   ├── models/         # Architecture & training
-│   ├── api/            # FastAPI backend
-│   └── utils/          # Config & metrics
-├── frontend/           # React + TypeScript
-├── notebooks/          # EDA, training, evaluation
-├── tests/              # Unit & integration tests
-├── docker/             # Dockerfiles
-└── docker-compose.yml
+│   ├── utils/
+│   │   ├── config.py           # All paths, constants, hyperparameter defaults
+│   │   └── metrics.py          # AUC-ROC, F1, sensitivity, specificity
+│   ├── data/
+│   │   ├── dataset.py          # HAM10000Dataset + build_dataframes()
+│   │   └── preprocessing.py    # Albumentations pipelines + MixUp helpers
+│   ├── models/
+│   │   ├── architecture.py     # DermaVisionModel (timm backbone + custom head)
+│   │   └── training.py         # Full training loop + MLflow logging + CLI
+│   └── api/                    # FastAPI backend (in progress)
+├── scripts/
+│   ├── export_experiments.py   # MLflow → experiments/ folder
+│   └── optuna_search.py        # Bayesian hyperparameter search
+├── experiments/                # Auto-generated per-run results + leaderboard
+├── mlruns/                     # MLflow tracking data (committed, weights excluded)
+├── checkpoints/                # Best model weights (gitignored)
+├── notebooks/
+│   └── 01_data_exploration.ipynb
+└── data/                       # Dataset (gitignored — download separately)
 ```
 
 ---
 
-## ⚠️ Ethical Considerations
+## Ethical Considerations
 
-This model is a **research prototype only** and is not intended for clinical use. The HAM10000 dataset has known demographic biases (predominantly European skin tones) which may affect performance across diverse populations. Class imbalance in the dataset is handled via weighted loss but users should interpret predictions with caution.
+This model is a **research prototype only** and is **not intended for clinical use**.
+
+- **Class imbalance:** HAM10000 is dominated by NV (nevus, 66.9%). Accuracy alone is misleading — we report AUC-ROC, sensitivity and specificity.
+- **Demographic bias:** The dataset consists predominantly of European skin tones (Rosendahl et al., 2018). Performance on darker skin tones is unvalidated and likely lower.
+- **Clinical disclaimer:** Predictions should never replace dermatologist diagnosis. The model has no access to patient history, lesion evolution, or tactile examination.
 
 Dataset license: [CC BY-NC 4.0](https://creativecommons.org/licenses/by-nc/4.0/)

@@ -12,7 +12,6 @@
 | 5 | [exp05-efficientnet-b3-full-stack](./exp05-efficientnet-b3-full-stack/summary.md) | `efficientnet_b3` | 20 | **0.9603** | 0.8013 | 0.7208 | 0.8199 | 0.9624 | ✅ | ✅ | ✅ |
 | 6 | [exp04-efficientnet-b3-mixup](./exp04-efficientnet-b3-mixup/summary.md) | `efficientnet_b3` | 15 | **0.9523** | 0.7903 | 0.6988 | 0.7939 | 0.9599 | ✅ | ✅ | ❌ |
 | 7 | [exp01-resnet50-baseline](./exp01-resnet50-baseline/summary.md) | `resnet50` | 5 | **0.9301** | 0.7783 | 0.4669 | 0.4333 | 0.9345 | ❌ | ❌ | ❌ |
-| 8 | [exp07-optuna](./exp07-optuna/summary.md) | `efficientnet_b3` | ? | **0.0000** | 0.0000 | 0.0000 | 0.0000 | 0.0000 | ❌ | ❌ | ❌ |
 
 ---
 
