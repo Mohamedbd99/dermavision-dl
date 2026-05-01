@@ -33,7 +33,7 @@ pip-log.txt
 # ===========================
 # Dataset & large files
 # ===========================
-data/
+/data/
 *.csv
 *.h5
 *.hdf5
