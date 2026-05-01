@@ -1,6 +1,7 @@
 import React, { useCallback, useState } from "react";
 import { predict, PredictionResult } from "../services/predict";
 import { useNavigate } from "react-router-dom";
+import ThemeSwitcher from "../components/ThemeSwitcher";
 
 const CLASS_COLORS: Record<string, string> = {
   MEL:   "bg-red-500",
@@ -65,12 +66,15 @@ export default function PredictPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Skin Lesion Classifier</h1>
-          <p className="text-sm text-gray-500 mt-1">Upload a dermoscopy image to get AI-powered analysis</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Skin Lesion Classifier</h1>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Upload a dermoscopy image to get AI-powered analysis</p>
         </div>
-        <button onClick={() => navigate("/dashboard")} className="btn-secondary text-sm">
-          📊 Dashboard
-        </button>
+        <div className="flex items-center gap-3">
+          <ThemeSwitcher />
+          <button onClick={() => navigate("/dashboard")} className="btn-secondary text-sm">
+            📊 Dashboard
+          </button>
+        </div>
       </div>
 
       {/* Drop zone */}

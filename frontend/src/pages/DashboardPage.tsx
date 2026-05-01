@@ -3,6 +3,7 @@ import { useAuth } from "../context/AuthContext";
 import { getHistory, getMetrics, HistoryItem } from "../services/predict";
 import { useNavigate } from "react-router-dom";
 import PredictionDetailModal from "../components/PredictionDetailModal";
+import ThemeSwitcher from "../components/ThemeSwitcher";
 
 const CLASS_FULL: Record<string, string> = {
   MEL:   "Melanoma",
@@ -60,12 +61,13 @@ export default function DashboardPage() {
       {/* Top bar */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-          <p className="text-sm text-gray-500">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Dashboard</h1>
+          <p className="text-sm text-gray-500 dark:text-gray-400">
             Welcome, <strong>{user?.username}</strong>
           </p>
         </div>
-        <div className="flex gap-3">
+        <div className="flex items-center gap-3">
+          <ThemeSwitcher />
           <button onClick={() => navigate("/predict")} className="btn-primary text-sm">
             🔍 New prediction
           </button>
@@ -85,8 +87,8 @@ export default function DashboardPage() {
             { label: "AUC-ROC",           value: metrics.metrics?.auc_roc_macro_ovr   ? metrics.metrics.auc_roc_macro_ovr.toFixed(4)     : "—" },
           ].map(({ label, value }) => (
             <div key={label} className="card text-center">
-              <p className="text-2xl font-bold text-brand-600">{value}</p>
-              <p className="text-xs text-gray-500 mt-1">{label}</p>
+              <p className="text-2xl font-bold text-brand-600 dark:text-brand-400">{value}</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{label}</p>
             </div>
           ))}
         </div>
@@ -94,7 +96,7 @@ export default function DashboardPage() {
 
       {/* Prediction history */}
       <div className="card">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">My Prediction History</h2>
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">My Prediction History</h2>
         {loading ? (
           <p className="text-gray-400 text-sm">Loading…</p>
         ) : history.length === 0 ? (
@@ -103,7 +105,7 @@ export default function DashboardPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b text-left text-gray-500">
+                <tr className="border-b border-gray-100 dark:border-gray-700 text-left text-gray-500 dark:text-gray-400">
                   <th className="pb-2 pr-4">File</th>
                   <th className="pb-2 pr-4">Prediction</th>
                   <th className="pb-2 pr-4">Confidence</th>
@@ -113,18 +115,18 @@ export default function DashboardPage() {
               </thead>
               <tbody>
                 {history.map((item) => (
-                  <tr key={item.id} className="border-b last:border-0 hover:bg-gray-50 cursor-pointer" onClick={() => setSelectedItem(item)}>
-                    <td className="py-3 pr-4 truncate max-w-[150px] text-gray-700">{item.filename}</td>
-                    <td className="py-3 pr-4 font-medium text-gray-900">
+                  <tr key={item.id} className="border-b border-gray-100 dark:border-gray-700 last:border-0 hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer" onClick={() => setSelectedItem(item)}>
+                    <td className="py-3 pr-4 truncate max-w-[150px] text-gray-700 dark:text-gray-300">{item.filename}</td>
+                    <td className="py-3 pr-4 font-medium text-gray-900 dark:text-gray-100">
                       {CLASS_FULL[item.predicted_class] ?? item.predicted_class}
                     </td>
-                    <td className="py-3 pr-4 text-gray-600">
+                    <td className="py-3 pr-4 text-gray-600 dark:text-gray-400">
                       {(item.confidence * 100).toFixed(1)}%
                     </td>
                     <td className={`py-3 pr-4 text-xs font-medium ${RISK[item.predicted_class]?.color ?? "text-gray-500"}`}>
                       {RISK[item.predicted_class]?.label ?? "—"}
                     </td>
-                    <td className="py-3 text-gray-400 whitespace-nowrap">
+                    <td className="py-3 text-gray-400 dark:text-gray-500 whitespace-nowrap">
                       {new Date(item.created_at).toLocaleString()}
                     </td>
                   </tr>
