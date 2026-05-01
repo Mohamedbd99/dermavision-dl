@@ -134,7 +134,7 @@ export default function PredictPage() {
             <div>
               <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider">{t("predict.topPrediction")}</p>
               <p className="text-lg font-bold text-gray-900 dark:text-gray-100">
-                {sortedScores[0]?.full_name ?? result.prediction}
+                {t(`classes.${sortedScores[0]?.label}`, { defaultValue: sortedScores[0]?.full_name ?? result.prediction })}
                 <span className="ml-2 text-brand-600">
                   {(result.confidence * 100).toFixed(1)}%
                 </span>
@@ -148,7 +148,9 @@ export default function PredictPage() {
             {sortedScores.slice(0, 3).map((s) => (
               <div key={s.label}>
                 <div className="flex justify-between text-sm mb-1">
-                  <span className="font-medium text-gray-700 dark:text-gray-200">{s.full_name}</span>
+                  <span className="font-medium text-gray-700 dark:text-gray-200">
+                      {t(`classes.${s.label}`, { defaultValue: s.full_name })}
+                    </span>
                     <span className="text-gray-500 dark:text-gray-400">{(s.probability * 100).toFixed(1)}%</span>
                 </div>
                 <div className="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-2.5">
@@ -169,7 +171,7 @@ export default function PredictPage() {
             <div className="mt-3 space-y-2">
               {sortedScores.map((s) => (
                 <div key={s.label} className="flex justify-between">
-                    <span className="text-gray-600 dark:text-gray-300">{s.label} — {s.full_name}</span>
+                    <span className="text-gray-600 dark:text-gray-300">{s.label} — {t(`classes.${s.label}`, { defaultValue: s.full_name })}</span>
                     <span className="font-mono text-gray-700 dark:text-gray-200">{(s.probability * 100).toFixed(2)}%</span>
                 </div>
               ))}
