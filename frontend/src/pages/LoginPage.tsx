@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { login } from "../services/auth";
 import { useAuth } from "../context/AuthContext";
+import ThemeSwitcher from "../components/ThemeSwitcher";
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -31,6 +32,9 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-brand-50 to-indigo-100 dark:from-gray-950 dark:to-gray-900 px-4">
+      <div className="absolute top-4 right-4">
+        <ThemeSwitcher />
+      </div>
       <div className="card w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">

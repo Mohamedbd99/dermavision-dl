@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { register } from "../services/auth";
+import ThemeSwitcher from "../components/ThemeSwitcher";
 
 export default function RegisterPage() {
   const navigate = useNavigate();
@@ -27,6 +28,9 @@ export default function RegisterPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-brand-50 to-indigo-100 dark:from-gray-950 dark:to-gray-900 px-4">
+      <div className="absolute top-4 right-4">
+        <ThemeSwitcher />
+      </div>
       <div className="card w-full max-w-md">
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-brand-600 mb-4">
