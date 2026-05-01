@@ -83,7 +83,9 @@ export default function PredictPage() {
         onDragLeave={() => setDragging(false)}
         onDrop={onDrop}
         className={`relative border-2 border-dashed rounded-xl flex flex-col items-center justify-center p-10 transition-colors cursor-pointer
-          ${dragging ? "border-brand-500 bg-brand-50" : "border-gray-300 bg-white hover:border-brand-400 hover:bg-gray-50"}`}
+          ${dragging
+            ? "border-brand-500 bg-brand-50 dark:bg-brand-900/20"
+            : "border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 hover:border-brand-400 hover:bg-gray-50 dark:hover:bg-gray-700/50"}`}
       >
         {preview ? (
           <img
@@ -94,8 +96,8 @@ export default function PredictPage() {
         ) : (
           <>
             <span className="text-5xl mb-3">🖼️</span>
-            <p className="text-gray-600 font-medium">Drag & drop an image here</p>
-            <p className="text-gray-400 text-sm mt-1">or click to browse</p>
+            <p className="text-gray-600 dark:text-gray-300 font-medium">Drag & drop an image here</p>
+            <p className="text-gray-400 dark:text-gray-500 text-sm mt-1">or click to browse</p>
           </>
         )}
         <input
@@ -134,7 +136,7 @@ export default function PredictPage() {
       </div>
 
       {error && (
-        <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+        <p className="text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg px-3 py-2">
           {error}
         </p>
       )}
@@ -145,8 +147,8 @@ export default function PredictPage() {
           <div className="flex items-center gap-3">
             <div className={`w-3 h-3 rounded-full ${CLASS_COLORS[result.prediction] ?? "bg-gray-400"}`} />
             <div>
-              <p className="text-xs text-gray-500 uppercase tracking-wider">Top prediction</p>
-              <p className="text-lg font-bold text-gray-900">
+              <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider">Top prediction</p>
+              <p className="text-lg font-bold text-gray-900 dark:text-gray-100">
                 {sortedScores[0]?.full_name ?? result.prediction}
                 <span className="ml-2 text-brand-600">
                   {(result.confidence * 100).toFixed(1)}%
@@ -157,14 +159,14 @@ export default function PredictPage() {
 
           {/* Probability bars — top 3 */}
           <div className="space-y-3">
-            <p className="text-sm font-semibold text-gray-700">Top-3 Predictions</p>
+            <p className="text-sm font-semibold text-gray-700 dark:text-gray-200">Top-3 Predictions</p>
             {sortedScores.slice(0, 3).map((s) => (
               <div key={s.label}>
                 <div className="flex justify-between text-sm mb-1">
-                  <span className="font-medium text-gray-700">{s.full_name}</span>
-                  <span className="text-gray-500">{(s.probability * 100).toFixed(1)}%</span>
+                  <span className="font-medium text-gray-700 dark:text-gray-200">{s.full_name}</span>
+                    <span className="text-gray-500 dark:text-gray-400">{(s.probability * 100).toFixed(1)}%</span>
                 </div>
-                <div className="w-full bg-gray-100 rounded-full h-2.5">
+                <div className="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-2.5">
                   <div
                     className={`h-2.5 rounded-full ${CLASS_COLORS[s.label] ?? "bg-brand-500"}`}
                     style={{ width: `${s.probability * 100}%` }}
@@ -176,20 +178,20 @@ export default function PredictPage() {
 
           {/* All scores */}
           <details className="text-sm">
-            <summary className="cursor-pointer text-gray-500 hover:text-gray-700">
+            <summary className="cursor-pointer text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200">
               Show all 7 class scores
             </summary>
             <div className="mt-3 space-y-2">
               {sortedScores.map((s) => (
                 <div key={s.label} className="flex justify-between">
-                  <span className="text-gray-600">{s.label} — {s.full_name}</span>
-                  <span className="font-mono text-gray-700">{(s.probability * 100).toFixed(2)}%</span>
+                    <span className="text-gray-600 dark:text-gray-300">{s.label} — {s.full_name}</span>
+                    <span className="font-mono text-gray-700 dark:text-gray-200">{(s.probability * 100).toFixed(2)}%</span>
                 </div>
               ))}
             </div>
           </details>
 
-          <p className="text-xs text-gray-400 border-t pt-3">
+          <p className="text-xs text-gray-400 dark:text-gray-500 border-t border-gray-100 dark:border-gray-700 pt-3">
             ⚠️ This tool is for research purposes only. Always consult a dermatologist for diagnosis.
           </p>
         </div>
