@@ -516,3 +516,124 @@ python -m src.models.training \
 | Notebook file wiped to 0 bytes by edit tool | Recovered with `cat > file << 'NBEOF'` heredoc |
 | ISIC CSV is one-hot (no `dx` column) | Used `df[label_cols].idxmax(axis=1)` |
 | `mlruns/` gitignored → professor couldn't see metrics | Removed from `.gitignore`; only `mlruns/**/*.pt` excluded |
+
+---
+
+## Week 5 — FastAPI Backend
+
+### 2026-05-01 — API Phase
+
+**Objective:** Expose the trained EfficientNet-B3 model (Exp 07, AUC=0.9776)
+via a production-grade FastAPI backend with JWT authentication, SQLite persistence,
+and full Swagger UI documentation.
+
+**Architecture decisions:**
+
+| Decision | Reason |
+|---|---|
+| **FastAPI** | Mandatory per subject rules; async-ready, automatic OpenAPI/Swagger |
+| **SQLite + SQLAlchemy 2.x** | Zero-config DB for dev/demo; ORM keeps it swappable to Postgres |
+| **JWT (HS256, python-jose)** | Stateless auth; no server-side session store needed |
+| **bcrypt (passlib)** | Industry-standard password hashing; never store plain text |
+| **Lifespan context manager** | Load model ONCE at startup; avoid per-request reload (latency) |
+| **`app.state` for model** | Thread-safe way to share model across all requests in FastAPI |
+| **Predictions audit table** | Every `/predict` call logged → reproducibility + user history |
+| **CORS open in dev** | Frontend (any origin) can call API locally; restrict in production |
+
+---
+
+### Files created
+
+```
+src/api/
+├── __init__.py        (pre-existing, empty)
+├── database.py        SQLAlchemy models: User + Prediction tables, get_db dependency
+├── auth.py            bcrypt password utils, JWT create/decode, get_current_user dependency
+├── endpoints.py       All route handlers (7 endpoints)
+└── main.py            FastAPI app factory, lifespan, CORS, Swagger config
+
+run_api.py             Convenience launcher at repo root (argparse wrapping uvicorn)
+```
+
+---
+
+### Endpoints
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| `POST` | `/auth/register` | ❌ public | Create account (bcrypt hash stored) |
+| `POST` | `/auth/login` | ❌ public | OAuth2 form → JWT token (60 min) |
+| `GET` | `/me` | 🔒 JWT | Current user profile |
+| `GET` | `/health` | ❌ public | Device, model, checkpoint status |
+| `GET` | `/metrics` | ❌ public | Full Exp 07 performance metrics |
+| `POST` | `/predict` | 🔒 JWT | Upload image → top-1 class + all 7 scores |
+| `GET` | `/history` | 🔒 JWT | User's prediction audit log |
+
+---
+
+### Commands
+
+```bash
+# Start the API (dev mode with auto-reload)
+source venv/bin/activate
+python run_api.py
+
+# Or directly with uvicorn
+uvicorn src.api.main:app --reload --host 0.0.0.0 --port 8000
+
+# Swagger UI
+open http://localhost:8000/docs
+
+# Quick smoke tests
+curl http://localhost:8000/health
+curl http://localhost:8000/metrics
+
+# Register + login + predict
+curl -X POST http://localhost:8000/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"username":"alice","email":"alice@example.com","password":"secret123"}'
+
+curl -X POST http://localhost:8000/auth/login \
+  -d "username=alice&password=secret123"
+
+# Use the token from login:
+curl -X POST http://localhost:8000/predict \
+  -H "Authorization: Bearer <TOKEN>" \
+  -F "file=@/path/to/lesion.jpg"
+```
+
+---
+
+### Data flow for `/predict`
+
+```
+Client uploads JPEG/PNG
+        │
+        ▼
+cv2.imdecode (BGR→RGB)          # matches training pipeline exactly
+        │
+        ▼
+get_val_transforms()             # Resize 224×224, ImageNet normalize
+        │
+        ▼
+DermaVisionModel.forward()       # EfficientNet-B3, Exp07 weights
+        │
+        ▼
+F.softmax(logits, dim=-1)        # 7 class probabilities
+        │
+        ▼
+top-1 class + confidence         # returned in PredictionOut schema
+        │
+        ▼
+INSERT INTO predictions          # audit log with all 7 scores as JSON
+```
+
+---
+
+### Result
+
+Server starts in ~3s (model load on MPS), Swagger UI fully functional at `/docs`.
+All 7 endpoints documented with request/response schemas and inline descriptions.
+Predictions are persisted per user for history/audit.
+
+**Git commit:** `feat: FastAPI backend with JWT auth, SQLite, /predict endpoint + Swagger`
