@@ -2,7 +2,7 @@
 
 > **Project:** Skin Lesion Classification (HAM10000 / ISIC 2018 Task 3)  
 > **Module:** Deep Learning — Prof. Haythem Ghazouani  
-> **Student:** Mohamed bendaamar & omar gharbi  
+> **Students:** Mohamed bendaamar & omar gharbi  
 > **Repo:** https://github.com/Mohamedbd99/dermavision-dl  
 > **Dataset:** ISIC 2018 Task 3 — 10,015 dermoscopy images, 7 classes  
 
