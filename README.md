@@ -2,9 +2,29 @@
 
 Multi-class skin lesion classification using deep learning on the **HAM10000 / ISIC 2018** dataset.
 
-> **Stack:** PyTorch · EfficientNet-B3 · FastAPI · React + TypeScript · MLflow · Optuna · Docker
+> **Stack:** PyTorch · EfficientNet-B3 · FastAPI · React + TypeScript · MLflow · Optuna · Docker · PostgreSQL
 > **Module:** Deep Learning — Prof. Haythem Ghazouani
 > **Students:** Mohamed Bendaamar & Omar Gharbi
+
+---
+
+## 🚀 Quickstart — zero dependencies required
+
+```bash
+git clone https://github.com/Mohamedbd99/dermavision-dl.git
+cd dermavision-dl
+docker compose up --build
+```
+
+Open **http://localhost:3000** — that's it.
+
+**What happens automatically:**
+- `db` — PostgreSQL 16 starts and becomes healthy
+- `api` — model checkpoint is downloaded from GitHub Releases, tables are created, FastAPI starts
+- `frontend` — React app is built and served via nginx
+
+**No `.env` file needed.** All defaults are wired in `docker-compose.yml`.  
+Optional: copy `.env.example` → `.env` if you want a custom `SECRET_KEY` for production.
 
 ---
 
