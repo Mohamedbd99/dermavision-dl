@@ -2,11 +2,13 @@ import React, { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { getHistory, getMetrics, HistoryItem } from "../services/predict";
 import { useNavigate } from "react-router-dom";
+import PredictionDetailModal from "../components/PredictionDetailModal";
 
 const CLASS_FULL: Record<string, string> = {
   MEL:   "Melanoma",
   NV:    "Melanocytic Nevi",
   BCC:   "Basal Cell Carcinoma",
+  AK:    "Actinic Keratosis",
   AKIEC: "Actinic Keratosis",
   BKL:   "Benign Keratosis",
   DF:    "Dermatofibroma",
@@ -16,6 +18,7 @@ const CLASS_FULL: Record<string, string> = {
 const RISK: Record<string, { label: string; color: string }> = {
   MEL:   { label: "High risk — consult dermatologist", color: "text-red-600"    },
   BCC:   { label: "Moderate–High risk",                 color: "text-orange-600" },
+  AK:    { label: "Moderate risk",                      color: "text-yellow-600" },
   AKIEC: { label: "Moderate risk",                      color: "text-yellow-600" },
   NV:    { label: "Low risk (benign)",                  color: "text-green-600"  },
   BKL:   { label: "Low risk (benign)",                  color: "text-green-600"  },
@@ -39,6 +42,7 @@ export default function DashboardPage() {
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const [metrics, setMetrics] = useState<Metrics | null>(null);
   const [loading, setLoading] = useState(true);
+  const [selectedItem, setSelectedItem] = useState<HistoryItem | null>(null);
 
   useEffect(() => {
     Promise.all([getHistory(), getMetrics()])
@@ -109,7 +113,7 @@ export default function DashboardPage() {
               </thead>
               <tbody>
                 {history.map((item) => (
-                  <tr key={item.id} className="border-b last:border-0 hover:bg-gray-50">
+                  <tr key={item.id} className="border-b last:border-0 hover:bg-gray-50 cursor-pointer" onClick={() => setSelectedItem(item)}>
                     <td className="py-3 pr-4 truncate max-w-[150px] text-gray-700">{item.filename}</td>
                     <td className="py-3 pr-4 font-medium text-gray-900">
                       {CLASS_FULL[item.predicted_class] ?? item.predicted_class}
@@ -130,6 +134,8 @@ export default function DashboardPage() {
           </div>
         )}
       </div>
+
+      <PredictionDetailModal item={selectedItem} onClose={() => setSelectedItem(null)} />
 
       <p className="text-xs text-gray-400 text-center">
         DermaVision · EfficientNet-B3 · HAM10000 · AUC 0.9776 · For research use only

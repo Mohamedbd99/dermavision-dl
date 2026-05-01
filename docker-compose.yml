@@ -10,6 +10,7 @@ services:
       - .env
     volumes:
       - ./dermavision.db:/app/dermavision.db   # persist SQLite DB
+      - uploads_data:/app/uploads              # persist uploaded images
     healthcheck:
       test: ["CMD", "python", "-c",
              "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
@@ -31,3 +32,7 @@ services:
         condition: service_healthy
     restart: unless-stopped
 
+
+
+volumes:
+  uploads_data:

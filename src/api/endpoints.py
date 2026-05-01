@@ -28,8 +28,11 @@ Notes
 from __future__ import annotations
 
 import json
+import shutil
+import uuid
 from datetime import datetime, timezone
 from io import BytesIO
+from pathlib import Path
 from typing import Dict, List, Optional
 
 import cv2
@@ -102,11 +105,13 @@ class ClassScore(BaseModel):
 
 class PredictionOut(BaseModel):
     """Full prediction response returned by /predict."""
+    id: int
     predicted_class: str
     predicted_class_full: str
     confidence: float
     all_scores: List[ClassScore]
     filename: Optional[str]
+    image_url: Optional[str]
     logged_at: datetime
 
 
@@ -114,6 +119,7 @@ class PredictionHistoryItem(BaseModel):
     """One row from the predictions audit log."""
     id: int
     filename: Optional[str]
+    image_url: Optional[str]
     predicted_class: str
     confidence: float
     all_scores: Dict[str, float]
@@ -353,9 +359,18 @@ def predict(
     ]
 
     # ── Persist to DB ─────────────────────────────────────────────────────
+    # Save image to uploads/ for later display
+    uploads_dir = Path("uploads")
+    uploads_dir.mkdir(exist_ok=True)
+    ext = Path(file.filename or "image.jpg").suffix or ".jpg"
+    saved_name = f"{uuid.uuid4().hex}{ext}"
+    saved_path = uploads_dir / saved_name
+    saved_path.write_bytes(image_bytes)
+
     pred_row = Prediction(
         user_id=current_user.id,
         filename=file.filename,
+        image_path=str(saved_path),
         predicted_class=top_class,
         confidence=top_conf,
         all_scores=json.dumps(scores),
@@ -364,12 +379,15 @@ def predict(
     db.commit()
     db.refresh(pred_row)
 
+    image_url = f"/api/uploads/{saved_name}"
     return PredictionOut(
+        id=pred_row.id,
         predicted_class=top_class,
         predicted_class_full=LABEL_MAP.get(top_class, top_class),
         confidence=round(top_conf, 6),
         all_scores=all_scores_out,
         filename=file.filename,
+        image_url=image_url,
         logged_at=pred_row.created_at,
     )
 
@@ -403,10 +421,12 @@ def history(
     # Deserialise all_scores JSON for each row
     out = []
     for row in rows:
+        img_name = Path(row.image_path).name if row.image_path else None
         out.append(
             PredictionHistoryItem(
                 id=row.id,
                 filename=row.filename,
+                image_url=f"/api/uploads/{img_name}" if img_name else None,
                 predicted_class=row.predicted_class,
                 confidence=row.confidence,
                 all_scores=row.scores_dict(),
@@ -414,6 +434,39 @@ def history(
             )
         )
     return out
+
+
+# ── /predictions/{id} ────────────────────────────────────────────────────────
+
+@router.get(
+    "/predictions/{prediction_id}",
+    response_model=PredictionHistoryItem,
+    summary="Get a single prediction by ID",
+    tags=["Inference"],
+)
+def get_prediction(
+    prediction_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Return full details of a single prediction (must belong to current user)."""
+    row = (
+        db.query(Prediction)
+        .filter(Prediction.id == prediction_id, Prediction.user_id == current_user.id)
+        .first()
+    )
+    if not row:
+        raise HTTPException(status_code=404, detail="Prediction not found")
+    img_name = Path(row.image_path).name if row.image_path else None
+    return PredictionHistoryItem(
+        id=row.id,
+        filename=row.filename,
+        image_url=f"/api/uploads/{img_name}" if img_name else None,
+        predicted_class=row.predicted_class,
+        confidence=row.confidence,
+        all_scores=row.scores_dict(),
+        created_at=row.created_at,
+    )
 
 
 # ── /me ──────────────────────────────────────────────────────────────────────

@@ -2,9 +2,9 @@ FROM python:3.9-slim
 
 WORKDIR /app
 
-# OS deps for OpenCV headless + bcrypt
+# OS deps for OpenCV headless + curl (for checkpoint download)
 RUN apt-get update && apt-get install -y --no-install-recommends \
-        libglib2.0-0 libsm6 libxext6 libxrender-dev \
+        libglib2.0-0 libsm6 libxext6 libxrender-dev curl \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Python dependencies first (layer cache)
@@ -14,8 +14,12 @@ RUN pip install --no-cache-dir -r requirements.api.txt
 # Copy source code
 COPY src/ ./src/
 
-# Copy model checkpoint
-COPY checkpoints/ ./checkpoints/
+# Download model checkpoint from GitHub Release (public, no auth needed)
+RUN mkdir -p checkpoints && \
+    curl -fL \
+      https://github.com/Mohamedbd99/dermavision-dl/releases/download/v1.0.0/exp07-optuna-FINAL_best.pt \
+      -o checkpoints/exp07-optuna-FINAL_best.pt && \
+    echo "Checkpoint downloaded: $(du -sh checkpoints/exp07-optuna-FINAL_best.pt)"
 
 # Non-root user for security
 RUN useradd -m appuser && chown -R appuser /app

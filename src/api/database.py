@@ -90,6 +90,7 @@ class Prediction(Base):
     id: int = Column(Integer, primary_key=True, index=True, autoincrement=True)
     user_id: int = Column(Integer, ForeignKey("users.id"), nullable=False)
     filename: str = Column(String(255), nullable=True)
+    image_path: str = Column(String(512), nullable=True)   # relative path under uploads/
     predicted_class: str = Column(String(20), nullable=False)
     confidence: float = Column(Float, nullable=False)
     all_scores: str = Column(Text, nullable=False)   # JSON {"AKIEC": 0.01, ...}

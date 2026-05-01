@@ -28,6 +28,7 @@ export interface HistoryItem {
   confidence: number;
   all_scores: Record<string, number>;
   created_at: string;
+  image_url?: string;
 }
 
 export async function predict(file: File): Promise<PredictionResult> {

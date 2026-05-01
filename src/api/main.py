@@ -184,3 +184,11 @@ app.add_middleware(
 
 # ── Mount routes ─────────────────────────────────────────────────────────────
 app.include_router(router)
+
+# Serve uploaded images at /uploads/<filename>
+from pathlib import Path
+from fastapi.staticfiles import StaticFiles
+
+_uploads_dir = Path("uploads")
+_uploads_dir.mkdir(exist_ok=True)
+app.mount("/uploads", StaticFiles(directory=str(_uploads_dir)), name="uploads")
