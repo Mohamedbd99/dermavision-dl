@@ -1,7 +1,5 @@
 import React, { useCallback, useState } from "react";
 import { predict, PredictionResult } from "../services/predict";
-import { useNavigate } from "react-router-dom";
-import ThemeSwitcher from "../components/ThemeSwitcher";
 
 const CLASS_COLORS: Record<string, string> = {
   MEL:   "bg-red-500",
@@ -14,8 +12,6 @@ const CLASS_COLORS: Record<string, string> = {
 };
 
 export default function PredictPage() {
-  const navigate = useNavigate();
-
   const [file, setFile]         = useState<File | null>(null);
   const [preview, setPreview]   = useState<string | null>(null);
   const [result, setResult]     = useState<PredictionResult | null>(null);
@@ -64,17 +60,9 @@ export default function PredictPage() {
   return (
     <div className="max-w-3xl mx-auto px-4 py-10 space-y-8">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Skin Lesion Classifier</h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Upload a dermoscopy image to get AI-powered analysis</p>
-        </div>
-        <div className="flex items-center gap-3">
-          <ThemeSwitcher />
-          <button onClick={() => navigate("/dashboard")} className="btn-secondary text-sm">
-            📊 Dashboard
-          </button>
-        </div>
+      <div>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Skin Lesion Classifier</h1>
+        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Upload a dermoscopy image to get AI-powered analysis</p>
       </div>
 
       {/* Drop zone */}

@@ -1,9 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { getHistory, getMetrics, HistoryItem } from "../services/predict";
-import { useNavigate } from "react-router-dom";
 import PredictionDetailModal from "../components/PredictionDetailModal";
-import ThemeSwitcher from "../components/ThemeSwitcher";
 
 const CLASS_FULL: Record<string, string> = {
   MEL:   "Melanoma",
@@ -38,8 +36,7 @@ interface Metrics {
 }
 
 export default function DashboardPage() {
-  const { user, logout }  = useAuth();
-  const navigate           = useNavigate();
+  const { user }  = useAuth();
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const [metrics, setMetrics] = useState<Metrics | null>(null);
   const [loading, setLoading] = useState(true);
@@ -54,27 +51,14 @@ export default function DashboardPage() {
       .finally(() => setLoading(false));
   }, []);
 
-  const handleLogout = () => { logout(); navigate("/login"); };
-
   return (
     <div className="max-w-5xl mx-auto px-4 py-10 space-y-8">
-      {/* Top bar */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Dashboard</h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400">
-            Welcome, <strong>{user?.username}</strong>
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
-          <ThemeSwitcher />
-          <button onClick={() => navigate("/predict")} className="btn-primary text-sm">
-            🔍 New prediction
-          </button>
-          <button onClick={handleLogout} className="btn-secondary text-sm">
-            Sign out
-          </button>
-        </div>
+      {/* Page title */}
+      <div>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Dashboard</h1>
+        <p className="text-sm text-gray-500 dark:text-gray-400">
+          Welcome, <strong>{user?.username}</strong>
+        </p>
       </div>
 
       {/* Model stats */}
