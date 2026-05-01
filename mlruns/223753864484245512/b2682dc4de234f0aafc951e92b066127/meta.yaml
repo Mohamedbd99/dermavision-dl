@@ -1,0 +1,15 @@
+artifact_uri: /Users/bidoun/Documents/projet_fed/mlruns/223753864484245512/b2682dc4de234f0aafc951e92b066127/artifacts
+end_time: 1777623860843
+entry_point_name: ''
+experiment_id: '223753864484245512'
+lifecycle_stage: active
+run_id: b2682dc4de234f0aafc951e92b066127
+run_name: exp06-efficientnet-b4-scaleup
+run_uuid: b2682dc4de234f0aafc951e92b066127
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1777617209824
+status: 3
+tags: []
+user_id: bidoun

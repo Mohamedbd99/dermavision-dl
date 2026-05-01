@@ -1,0 +1,13 @@
+{
+  "accuracy": 0.7953,
+  "auc_roc": 0.966,
+  "best_auc_roc": 0.966,
+  "epoch_time_s": 328.7,
+  "f1_macro": 0.7105,
+  "f1_weighted": 0.8072,
+  "sensitivity": 0.7823,
+  "specificity": 0.96,
+  "train_acc": 0.8015,
+  "train_loss": 0.412073,
+  "val_loss": 0.6267
+}
