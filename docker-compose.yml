@@ -1,5 +1,22 @@
 services:
-  # ── FastAPI backend ──────────────────────────────────────────────────────────
+  # ── PostgreSQL ────────────────────────────────────────────────────────────
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER:     dermavision
+      POSTGRES_PASSWORD: dermavision
+      POSTGRES_DB:       dermavision
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dermavision -d dermavision"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    restart: unless-stopped
+
+  # ── FastAPI backend ───────────────────────────────────────────────────────
   api:
     build:
       context: .
@@ -8,9 +25,13 @@ services:
       - "8000:8000"
     env_file:
       - .env
+    environment:
+      DATABASE_URL: postgresql://dermavision:dermavision@db:5432/dermavision
     volumes:
-      - ./dermavision.db:/app/dermavision.db   # persist SQLite DB
-      - uploads_data:/app/uploads              # persist uploaded images
+      - uploads_data:/app/uploads
+    depends_on:
+      db:
+        condition: service_healthy
     healthcheck:
       test: ["CMD", "python", "-c",
              "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
@@ -20,7 +41,7 @@ services:
       start_period: 60s
     restart: unless-stopped
 
-  # ── React frontend + nginx proxy ─────────────────────────────────────────────
+  # ── React frontend + nginx proxy ──────────────────────────────────────────
   frontend:
     build:
       context: .
@@ -32,7 +53,6 @@ services:
         condition: service_healthy
     restart: unless-stopped
 
-
-
 volumes:
+  pg_data:
   uploads_data:

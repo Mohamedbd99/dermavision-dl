@@ -1,55 +1,31 @@
 """
-database.py — SQLite persistence layer
-=======================================
-Uses SQLAlchemy 2.x with a simple SQLite file stored at:
-    <repo_root>/dermavision.db
+database.py — PostgreSQL persistence layer
+==========================================
+Uses SQLAlchemy 2.x.  Connection string is read from the DATABASE_URL
+environment variable (set in docker-compose or .env).
 
-Tables
-------
-users
-    id          INTEGER  PK autoincrement
-    username    TEXT     unique, not-null
-    email       TEXT     unique, not-null
-    hashed_pwd  TEXT     not-null
-    is_active   BOOLEAN  default True
-    created_at  DATETIME default now()
-
-predictions (audit log — every /predict call is stored)
-    id          INTEGER  PK autoincrement
-    user_id     INTEGER  FK → users.id
-    filename    TEXT
-    predicted_class TEXT
-    confidence  FLOAT
-    all_scores  TEXT     (JSON string of {class: prob})
-    created_at  DATETIME default now()
-
-Usage
------
-    from src.api.database import get_db, User, Prediction
-    # FastAPI: Depends(get_db)
+Default (local dev fallback): sqlite:///./dermavision.db
 """
 
 from __future__ import annotations
 
 import json
+import os
 from datetime import datetime, timezone
 
 from sqlalchemy import (
     Boolean, Column, DateTime, Float, ForeignKey,
-    Integer, String, Text, create_engine, text,
+    Integer, String, Text, create_engine,
 )
 from sqlalchemy.orm import DeclarativeBase, Session, relationship, sessionmaker
 
-from src.utils.config import REPO_ROOT
-
 # ── Engine ─────────────────────────────────────────────────────────────────
-DB_PATH = REPO_ROOT / "dermavision.db"
-DATABASE_URL = f"sqlite:///{DB_PATH}"
+DATABASE_URL = os.environ.get("DATABASE_URL", "sqlite:///./dermavision.db")
 
-engine = create_engine(
-    DATABASE_URL,
-    connect_args={"check_same_thread": False},  # needed for SQLite + FastAPI
-)
+# psycopg2 needs no extra args; SQLite needs check_same_thread=False
+_connect_args = {"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {}
+
+engine = create_engine(DATABASE_URL, connect_args=_connect_args, pool_pre_ping=True)
 SessionLocal = sessionmaker(bind=engine, autocommit=False, autoflush=False)
 
 
@@ -115,18 +91,8 @@ class Prediction(Base):
 
 # ── DB init ─────────────────────────────────────────────────────────────────
 def init_db() -> None:
-    """Create all tables if they don't exist yet, and run column migrations."""
+    """Create all tables if they don't exist yet (idempotent)."""
     Base.metadata.create_all(bind=engine)
-    # Migration: add image_path to predictions if it doesn't exist yet
-    with engine.connect() as conn:
-        cols = [row[1] for row in conn.execute(
-            text("PRAGMA table_info(predictions)")
-        )]
-        if "image_path" not in cols:
-            conn.execute(text(
-                "ALTER TABLE predictions ADD COLUMN image_path VARCHAR(512)"
-            ))
-            conn.commit()
 
 
 # ── FastAPI dependency ───────────────────────────────────────────────────────
