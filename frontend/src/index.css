@@ -7,6 +7,11 @@
     @apply bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-gray-100;
     font-family: "Inter", system-ui, sans-serif;
   }
+  /* Arabic: use system Arabic fonts and bump size slightly for legibility */
+  :root.font-arabic body,
+  :root.font-arabic {
+    font-family: "Cairo", "Noto Sans Arabic", "Segoe UI", Tahoma, Arial, sans-serif;
+  }
 }
 
 @layer components {

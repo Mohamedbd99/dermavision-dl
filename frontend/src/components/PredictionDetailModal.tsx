@@ -1,34 +1,22 @@
 import React from "react";
 import { HistoryItem } from "../services/predict";
+import { useTranslation } from "react-i18next";
 
-const CLASS_LABELS: Record<string, string> = {
-  MEL:   "Melanoma",
-  NV:    "Melanocytic Nevi",
-  BCC:   "Basal Cell Carcinoma",
-  AK:    "Actinic Keratosis",
-  AKIEC: "Actinic Keratosis",
-  BKL:   "Benign Keratosis",
-  DF:    "Dermatofibroma",
-  VASC:  "Vascular Lesion",
+const RISK_CONFIG: Record<string, { bar: string; badge: string }> = {
+  MEL:   { bar: "bg-red-500",    badge: "bg-red-100    text-red-700    dark:bg-red-900/40    dark:text-red-300"    },
+  BCC:   { bar: "bg-orange-500", badge: "bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300" },
+  AK:    { bar: "bg-yellow-500", badge: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300" },
+  AKIEC: { bar: "bg-yellow-500", badge: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300" },
+  NV:    { bar: "bg-green-500",  badge: "bg-green-100  text-green-700  dark:bg-green-900/40  dark:text-green-300"  },
+  BKL:   { bar: "bg-green-500",  badge: "bg-green-100  text-green-700  dark:bg-green-900/40  dark:text-green-300"  },
+  DF:    { bar: "bg-green-500",  badge: "bg-green-100  text-green-700  dark:bg-green-900/40  dark:text-green-300"  },
+  VASC:  { bar: "bg-purple-500", badge: "bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300" },
 };
 
-const RISK_CONFIG: Record<string, { label: string; bar: string; badge: string }> = {
-  MEL:   { label: "High risk",          bar: "bg-red-500",    badge: "bg-red-100    text-red-700    dark:bg-red-900/40    dark:text-red-300"    },
-  BCC:   { label: "Moderate–high risk", bar: "bg-orange-500", badge: "bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300" },
-  AK:    { label: "Moderate risk",      bar: "bg-yellow-500", badge: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300" },
-  AKIEC: { label: "Moderate risk",      bar: "bg-yellow-500", badge: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300" },
-  NV:    { label: "Low risk",           bar: "bg-green-500",  badge: "bg-green-100  text-green-700  dark:bg-green-900/40  dark:text-green-300"  },
-  BKL:   { label: "Low risk",           bar: "bg-green-500",  badge: "bg-green-100  text-green-700  dark:bg-green-900/40  dark:text-green-300"  },
-  DF:    { label: "Low risk",           bar: "bg-green-500",  badge: "bg-green-100  text-green-700  dark:bg-green-900/40  dark:text-green-300"  },
-  VASC:  { label: "Low risk",           bar: "bg-purple-500", badge: "bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300" },
-};
-
-interface Props {
-  item: HistoryItem | null;
-  onClose: () => void;
-}
+interface Props { item: HistoryItem | null; onClose: () => void; }
 
 export default function PredictionDetailModal({ item, onClose }: Props) {
+  const { t } = useTranslation();
   if (!item) return null;
 
   const risk = RISK_CONFIG[item.predicted_class];
@@ -36,7 +24,7 @@ export default function PredictionDetailModal({ item, onClose }: Props) {
   const scores = Object.entries(item.all_scores ?? {})
     .map(([code, prob]) => ({
       code,
-      label: CLASS_LABELS[code] ?? code,
+      label: t(`classes.${code}`, { defaultValue: code }),
       prob,
       bar: RISK_CONFIG[code]?.bar ?? "bg-brand-500",
     }))
@@ -54,7 +42,7 @@ export default function PredictionDetailModal({ item, onClose }: Props) {
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-gray-700">
           <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100">
-            Prediction Detail
+            {t("modal.title")}
           </h2>
           <button
             onClick={onClose}
@@ -76,26 +64,26 @@ export default function PredictionDetailModal({ item, onClose }: Props) {
                 />
               ) : (
                 <div className="w-36 h-36 flex items-center justify-center rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-400 text-xs text-center px-2">
-                  No image
+                  {t("common.noImage")}
                 </div>
               )}
             </div>
 
             <div className="flex-1 min-w-0 space-y-3">
               <div>
-                <p className="text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1">Diagnosis</p>
+                <p className="text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1">{t("modal.diagnosis")}</p>
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${risk?.badge ?? "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300"}`}>
                     {item.predicted_class}
                   </span>
                   <span className="text-sm font-semibold text-gray-900 dark:text-gray-100">
-                    {CLASS_LABELS[item.predicted_class] ?? item.predicted_class}
+                    {t(`classes.${item.predicted_class}`, { defaultValue: item.predicted_class })}
                   </span>
                 </div>
               </div>
 
               <div>
-                <p className="text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1">Confidence</p>
+                <p className="text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1">{t("modal.confidence")}</p>
                 <p className="text-2xl font-bold text-brand-600 dark:text-brand-400">
                   {(item.confidence * 100).toFixed(1)}%
                 </p>
@@ -103,9 +91,9 @@ export default function PredictionDetailModal({ item, onClose }: Props) {
 
               {risk && (
                 <div>
-                  <p className="text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1">Risk level</p>
+                  <p className="text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1">{t("modal.riskLevel")}</p>
                   <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${risk.badge}`}>
-                    {risk.label}
+                    {t(`risk.${item.predicted_class}`, { defaultValue: item.predicted_class })}
                   </span>
                 </div>
               )}
@@ -115,18 +103,18 @@ export default function PredictionDetailModal({ item, onClose }: Props) {
           {/* Date + File */}
           <div className="grid grid-cols-2 gap-4 py-3 border-t border-b border-gray-100 dark:border-gray-700 text-sm">
             <div>
-              <p className="text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-0.5">Date</p>
+              <p className="text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-0.5">{t("modal.date")}</p>
               <p className="text-gray-700 dark:text-gray-300">{new Date(item.created_at).toLocaleString()}</p>
             </div>
             <div className="min-w-0">
-              <p className="text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-0.5">File</p>
+              <p className="text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-0.5">{t("modal.file")}</p>
               <p className="text-gray-700 dark:text-gray-300 truncate">{item.filename}</p>
             </div>
           </div>
 
           {/* All class scores */}
           <div>
-            <p className="text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-3">All class scores</p>
+            <p className="text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-3">{t("modal.allScores")}</p>
             <div className="space-y-2.5">
               {scores.map(({ code, label, prob, bar }) => (
                 <div key={code}>

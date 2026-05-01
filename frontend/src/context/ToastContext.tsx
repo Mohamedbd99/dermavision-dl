@@ -79,8 +79,8 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   return (
     <ToastContext.Provider value={{ toast, success, error, info }}>
       {children}
-      {/* Portal-style fixed container */}
-      <div className="fixed bottom-5 right-5 z-[9999] flex flex-col gap-2.5 items-end pointer-events-none">
+      {/* bottom-end corner — flips automatically in RTL */}
+      <div className="fixed bottom-5 end-5 z-[9999] flex flex-col gap-2.5 items-end rtl:items-start pointer-events-none">
         {toasts.map((t) => (
           <ToastItem key={t.id} toast={t} onDismiss={dismiss} />
         ))}

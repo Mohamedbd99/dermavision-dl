@@ -1,21 +1,21 @@
 import React, { useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { useAuth } from "../context/AuthContext";
 import ThemeSwitcher from "./ThemeSwitcher";
-
-const NAV = [
-  { to: "/predict",   icon: "🔬", label: "Analyse"   },
-  { to: "/dashboard", icon: "📊", label: "Dashboard" },
-];
+import LanguageSwitcher from "./LanguageSwitcher";
 
 function SidebarContent({ onClose }: { onClose?: () => void }) {
   const { logout, user } = useAuth();
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
-  const handleLogout = () => {
-    logout();
-    navigate("/login");
-  };
+  const NAV = [
+    { to: "/predict",   icon: "🔬", label: t("common.analyse")   },
+    { to: "/dashboard", icon: "📊", label: t("common.dashboard") },
+  ];
+
+  const handleLogout = () => { logout(); navigate("/login"); };
 
   return (
     <div className="flex flex-col h-full py-5">
@@ -25,7 +25,7 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
           🔬
         </div>
         <div className="min-w-0">
-          <p className="font-bold text-gray-900 dark:text-white leading-tight">DermaVision</p>
+          <p className="font-bold text-gray-900 dark:text-white leading-tight">{t("common.appName")}</p>
           <p className="text-xs text-gray-400 dark:text-gray-500 truncate">{user?.username}</p>
         </div>
       </div>
@@ -33,7 +33,7 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
       {/* Nav */}
       <nav className="flex-1 px-3 space-y-1">
         <p className="text-[11px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider px-3 mb-2">
-          App
+          {t("sidebar.app")}
         </p>
         {NAV.map(({ to, icon, label }) => (
           <NavLink
@@ -68,11 +68,12 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
           }
         >
           <span className="text-base w-5 text-center shrink-0">🏠</span>
-          Home
+          {t("common.home")}
         </NavLink>
 
-        <div className="px-3 py-2">
+        <div className="px-3 py-1.5 space-y-2">
           <ThemeSwitcher />
+          <LanguageSwitcher />
         </div>
 
         <button
@@ -80,7 +81,7 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
           className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-600 dark:text-gray-400 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600 dark:hover:text-red-400 transition-colors"
         >
           <span className="text-base w-5 text-center shrink-0">↩</span>
-          Sign out
+          {t("common.signOut")}
         </button>
       </div>
     </div>
@@ -92,14 +93,17 @@ export default function Sidebar() {
 
   return (
     <>
-      {/* Desktop sidebar */}
-      <aside className="hidden lg:flex flex-col fixed top-0 left-0 h-screen w-64 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700/60 z-30">
+      {/* Desktop sidebar — uses logical `start` so it flips to right in RTL automatically */}
+      <aside className="hidden lg:flex flex-col fixed top-0 start-0 h-screen w-64
+        bg-white dark:bg-gray-900 border-e border-gray-200 dark:border-gray-700/60 z-30">
         <SidebarContent />
       </aside>
 
-      {/* Mobile hamburger */}
+      {/* Mobile hamburger — top-start corner */}
       <button
-        className="lg:hidden fixed top-3 left-3 z-40 w-9 h-9 flex items-center justify-center bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow text-gray-600 dark:text-gray-300"
+        className="lg:hidden fixed top-3 start-3 z-40 w-9 h-9 flex items-center justify-center
+          bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700
+          rounded-lg shadow text-gray-600 dark:text-gray-300"
         onClick={() => setOpen(true)}
         aria-label="Open menu"
       >
@@ -115,9 +119,13 @@ export default function Sidebar() {
             className="lg:hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-40"
             onClick={() => setOpen(false)}
           />
-          <aside className="lg:hidden fixed top-0 left-0 h-screen w-64 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700/60 z-50 shadow-2xl">
+          <aside className="lg:hidden fixed top-0 start-0 h-screen w-64
+            bg-white dark:bg-gray-900 border-e border-gray-200 dark:border-gray-700/60
+            z-50 shadow-2xl">
             <button
-              className="absolute top-3 right-3 w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-sm"
+              className="absolute top-3 end-3 w-8 h-8 flex items-center justify-center
+                rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-gray-200
+                hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-sm"
               onClick={() => setOpen(false)}
             >
               ✕

@@ -2,6 +2,7 @@ import React, { useCallback, useState } from "react";
 import { predict, PredictionResult } from "../services/predict";
 import { useToast } from "../context/ToastContext";
 import { parseApiError } from "../utils/parseApiError";
+import { useTranslation } from "react-i18next";
 
 const CLASS_COLORS: Record<string, string> = {
   MEL:   "bg-red-500",
@@ -15,6 +16,7 @@ const CLASS_COLORS: Record<string, string> = {
 
 export default function PredictPage() {
   const { success, error: toastError } = useToast();
+  const { t } = useTranslation();
   const [file, setFile]         = useState<File | null>(null);
   const [preview, setPreview]   = useState<string | null>(null);
   const [result, setResult]     = useState<PredictionResult | null>(null);
@@ -45,7 +47,7 @@ export default function PredictPage() {
     try {
       const res = await predict(file);
       setResult(res);
-      success(`Analysis complete — top prediction: ${res.prediction} (${(res.confidence * 100).toFixed(1)}%)`);
+      success(t("predict.successMsg", { class: res.prediction, confidence: (res.confidence * 100).toFixed(1) }));
     } catch (err: unknown) {
       toastError(parseApiError(err));
     } finally {
@@ -62,8 +64,8 @@ export default function PredictPage() {
     <div className="max-w-3xl mx-auto px-4 py-10 space-y-8">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Skin Lesion Classifier</h1>
-        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Upload a dermoscopy image to get AI-powered analysis</p>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{t("predict.title")}</h1>
+        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{t("predict.subtitle")}</p>
       </div>
 
       {/* Drop zone */}
@@ -85,8 +87,8 @@ export default function PredictPage() {
         ) : (
           <>
             <span className="text-5xl mb-3">🖼️</span>
-            <p className="text-gray-600 dark:text-gray-300 font-medium">Drag & drop an image here</p>
-            <p className="text-gray-400 dark:text-gray-500 text-sm mt-1">or click to browse</p>
+            <p className="text-gray-600 dark:text-gray-300 font-medium">{t("predict.dropzoneLabel")}</p>
+            <p className="text-gray-400 dark:text-gray-500 text-sm mt-1">{t("predict.dropzoneHint")}</p>
           </>
         )}
         <input
@@ -112,14 +114,14 @@ export default function PredictPage() {
               </svg>
               Analysing…
             </span>
-          ) : "🔍 Analyse Image"}
+          ) : t("predict.analyseBtn")}
         </button>
         {file && (
           <button
             onClick={() => { setFile(null); setPreview(null); setResult(null); }}
             className="btn-secondary"
           >
-            Clear
+            {t("predict.clearBtn")}
           </button>
         )}
       </div>
@@ -130,7 +132,7 @@ export default function PredictPage() {
           <div className="flex items-center gap-3">
             <div className={`w-3 h-3 rounded-full ${CLASS_COLORS[result.prediction] ?? "bg-gray-400"}`} />
             <div>
-              <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider">Top prediction</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider">{t("predict.topPrediction")}</p>
               <p className="text-lg font-bold text-gray-900 dark:text-gray-100">
                 {sortedScores[0]?.full_name ?? result.prediction}
                 <span className="ml-2 text-brand-600">
@@ -142,7 +144,7 @@ export default function PredictPage() {
 
           {/* Probability bars — top 3 */}
           <div className="space-y-3">
-            <p className="text-sm font-semibold text-gray-700 dark:text-gray-200">Top-3 Predictions</p>
+            <p className="text-sm font-semibold text-gray-700 dark:text-gray-200">{t("predict.top3")}</p>
             {sortedScores.slice(0, 3).map((s) => (
               <div key={s.label}>
                 <div className="flex justify-between text-sm mb-1">
@@ -162,7 +164,7 @@ export default function PredictPage() {
           {/* All scores */}
           <details className="text-sm">
             <summary className="cursor-pointer text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200">
-              Show all 7 class scores
+              {t("predict.showAll")}
             </summary>
             <div className="mt-3 space-y-2">
               {sortedScores.map((s) => (
@@ -175,7 +177,7 @@ export default function PredictPage() {
           </details>
 
           <p className="text-xs text-gray-400 dark:text-gray-500 border-t border-gray-100 dark:border-gray-700 pt-3">
-            ⚠️ This tool is for research purposes only. Always consult a dermatologist for diagnosis.
+            {t("predict.researchWarning")}
           </p>
         </div>
       )}
