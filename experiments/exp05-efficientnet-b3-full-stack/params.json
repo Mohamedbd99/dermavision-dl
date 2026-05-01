@@ -1,0 +1,14 @@
+{
+  "backbone": "efficientnet_b3",
+  "batch_size": "32",
+  "dropout": "0.3",
+  "epochs": "20",
+  "lr": "0.0001",
+  "mixup_alpha": "0.4",
+  "scheduler": "cosine",
+  "seed": "42",
+  "use_advanced_aug": "True",
+  "use_class_weights": "True",
+  "use_mixup": "True",
+  "weight_decay": "1e-05"
+}
